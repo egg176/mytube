@@ -199,7 +199,7 @@ function norm(v, decode = false) {
 }
 
 const icon = n => `<svg class="i" aria-hidden="true"><use href="#i-${n}"/></svg>`;
-const saveLabel = on => on ? icon('check') + ' Saved' : icon('plus') + ' Watch later';
+const saveLabel = on => on ? icon('check') + '<span class="lbl">Saved</span>' : icon('plus') + '<span class="lbl">Watch later</span>';
 
 function durBadge(v) {
   const b = v.snippet?.liveBroadcastContent;
@@ -304,7 +304,7 @@ function render(items, append = false) {
             ? `<a class="row-channel" href="${chHref}"><span class="channel-avatar sm" ${avStyle} data-cid="${escapeHtml(sn.channelId)}">${avatarInner}</span><span class="meta">${escapeHtml(channel)}</span></a>`
             : `<div class="meta">${escapeHtml(channel)}</div>`}
           ${desc ? `<p class="row-desc">${escapeHtml(desc)}</p>` : ''}
-          <button class="save-video secondary" data-id="${escapeHtml(v.id)}">${saveLabel(isSaved(v.id))}</button>
+          <button class="save-video secondary" title="Watch later" aria-label="Watch later" data-id="${escapeHtml(v.id)}">${saveLabel(isSaved(v.id))}</button>
         </div>`;
       frag.appendChild(card);
       continue;
@@ -318,7 +318,7 @@ function render(items, append = false) {
           <h3><a href="${watchHref}">${escapeHtml(sn.title || 'Untitled video')}</a></h3>
           ${channelLine}
           <div class="meta">${escapeHtml(meta)}</div>
-          <button class="save-video secondary" data-id="${escapeHtml(v.id)}">${saveLabel(isSaved(v.id))}</button>
+          <button class="save-video secondary" title="Watch later" aria-label="Watch later" data-id="${escapeHtml(v.id)}">${saveLabel(isSaved(v.id))}</button>
         </div>
       </div>`;
     frag.appendChild(card);
@@ -1001,6 +1001,8 @@ function setActiveChip(q) {
 function router() {
   const token = ++state.token;
   const { name, parts, params } = currentRoute();
+  document.body.classList.toggle('on-watch', name === 'watch');
+  $('.top').classList.remove('top-hidden');
   state.list = null;
   clearSkeletons();
   results.classList.remove('list-layout');
@@ -1247,6 +1249,23 @@ $('#prefsModal').addEventListener('click', e => {
   toast('Cleared');
 });
 
+/* ---------- Phone: header slides away while scrolling down, back on scroll up ---------- */
+const phoneMq = window.matchMedia('(max-width: 700px)');
+let lastY = window.scrollY, ticking = false;
+window.addEventListener('scroll', () => {
+  if (ticking) return;
+  ticking = true;
+  requestAnimationFrame(() => {
+    ticking = false;
+    const y = window.scrollY, top = $('.top');
+    if (!phoneMq.matches || document.activeElement === $('#query') || document.body.classList.contains('on-watch')) top.classList.remove('top-hidden');
+    else if (y > lastY + 8 && y > 90) top.classList.add('top-hidden');
+    else if (y < lastY - 8 || y < 40) top.classList.remove('top-hidden');
+    lastY = y;
+  });
+}, { passive: true });
+$('#query').addEventListener('focus', () => $('.top').classList.remove('top-hidden'));
+
 /* ---------- Sidebar: full or icon-only, remembered in this browser ---------- */
 function setSidebar(mini) {
   document.body.classList.toggle('side-mini', mini);
@@ -1254,7 +1273,7 @@ function setSidebar(mini) {
   lsSet(SIDEBAR_STORAGE, mini ? 'mini' : 'full');
 }
 $('#menuBtn').addEventListener('click', () => setSidebar(!document.body.classList.contains('side-mini')));
-$$('.nav').forEach(n => n.title = n.textContent.trim());
+$$('.nav').forEach(n => n.title = (n.querySelector('.long') || n.querySelector('.lbl')).textContent.trim());
 setSidebar(lsGet(SIDEBAR_STORAGE, 'full') === 'mini');
 
 window.addEventListener('hashchange', router);

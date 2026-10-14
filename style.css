@@ -52,6 +52,7 @@ aside{padding:18px 12px;border-right:1px solid var(--line);position:sticky;top:6
 .nav{display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:10px;color:#e6e6e6}
 .nav:hover,.nav.active{background:var(--panel2)}
 .nav .ico{width:20px;text-align:center;font-size:18px}
+.nav .short{display:none}
 .nav .lbl{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media(min-width:701px){
   body.side-mini .layout{--side-w:76px}
@@ -152,6 +153,7 @@ a.meta:hover,.meta a:hover{color:white}
 .skeleton .sk-avatar{width:37px;height:37px;border-radius:50%;flex-shrink:0}
 .skeleton .sk-line{height:13px;margin-bottom:9px}
 @keyframes shimmer{0%{background-position:100% 50%}100%{background-position:0 50%}}
+
 @media(prefers-reduced-motion:reduce){.skeleton .sk{animation:none}.layout{transition:none}}
 #sentinel{height:1px}
 
@@ -405,6 +407,89 @@ aside{top:74px;height:calc(100vh - 74px)}
   #listView .thumb-link{border-radius:0}
   .layout{min-height:0}
   main{padding:12px 0 24px}
+}
+/* ==========================================================
+   Phone polish: bottom tabs, ghost header, icon-only save,
+   pinned player, bottom sheets, touch feedback
+   ========================================================== */
+a,button,select,label{touch-action:manipulation}
+@media(hover:none){
+  .video:hover .thumb{transform:none;filter:none}
+  .nav:hover{transform:none}
+  button:active,.chip:active,.nav:active{transform:scale(.96)}
+  .thumb-link:active{opacity:.85}
+}
+@media(max-width:700px){
+  @keyframes cardIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  @keyframes sheetUp{from{transform:translateY(48px);opacity:0}to{transform:none;opacity:1}}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+  /* header */
+  .top{transition:transform .26s ease;gap:6px;padding-left:12px;padding-right:6px}
+  .top.top-hidden{transform:translateY(-100%)}
+  body.on-watch .top{position:static;transform:none}
+  .brand{margin-right:4px}
+  .playlogo{width:34px;height:26px;border-radius:8px}
+  .search{margin:0}
+  .search input{height:40px;padding:0 16px;border-radius:20px 0 0 20px}
+  .search button{height:40px;width:48px;padding:0;border-radius:0 20px 20px 0}
+  .top-actions{gap:0}
+  .top-actions .small-btn{background:none;border:0;width:44px;height:44px;font-size:22px;color:#e8e8e8}
+  .top-actions .small-btn:active{background:#2a2a2a}
+
+  /* bottom tab bar */
+  aside{border-top:1px solid #2c2c2c;background:rgba(17,17,17,.96);padding-top:4px}
+  aside .nav{gap:3px;padding:2px 0 0;font-size:10.5px;font-weight:600;letter-spacing:.01em;color:#9a9a9a;transition:color .2s}
+  aside .nav .ico{width:58px;height:30px;border-radius:15px;transition:background .22s,transform .15s}
+  aside .nav .ico .i{width:24px;height:24px;stroke-width:1.8}
+  aside .nav.active{color:#fff}
+  aside .nav.active .ico{background:rgba(230,33,23,.24)}
+  aside .nav.active .ico .i{stroke-width:2.1}
+  aside .nav:active .ico{transform:scale(.9)}
+  aside .nav .lbl{max-width:100%;padding:0 2px}
+
+  /* feed */
+  .chip{height:38px;display:inline-flex;align-items:center;padding:0 16px;font-size:14px}
+  .chips{scroll-snap-type:x proximity}
+  .chip{scroll-snap-align:start}
+  .video:not(.skeleton){animation:cardIn .32s ease both}
+  .video-info{padding:12px 4px 0 12px;position:relative;gap:12px}
+  .video-text{flex:1;padding-right:44px}
+  .video .meta{line-height:1.5}
+  #results .video .save-video{position:absolute;top:6px;right:2px;width:42px;height:42px;padding:0;margin:0;border:0;border-radius:50%;background:none;color:#b5b5b5;font-size:20px}
+  #results .video .save-video:active{background:#2a2a2a}
+  #results .video .save-video .lbl{display:none}
+  .video.row .row-text{position:relative;padding-right:50px}
+  #results .video.row .save-video{top:4px;right:6px}
+  .video h3{font-size:15px;line-height:1.38}
+  .filters select{height:44px}
+
+  /* watch page: player stays pinned while you read and scroll */
+  .watch-primary{display:contents}
+  .player{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;box-shadow:0 6px 18px #0008}
+  .watch h1{margin:14px 12px 10px}
+  .watch-row{gap:10px}
+  .watch-actions{padding:2px 0 6px}
+  .watch-actions .secondary{height:40px;border-radius:20px;font-size:14px}
+  .desc-box{margin-top:10px}
+
+  /* dialogs become bottom sheets */
+  .settings{padding:0;align-items:flex-end;backdrop-filter:none}
+  .settings.open{animation:fadeIn .2s ease}
+  .settings-card,.prefs-card{width:100%;max-height:92vh;border-radius:22px 22px 0 0;border-bottom:0;padding:10px 18px calc(18px + env(safe-area-inset-bottom));animation:sheetUp .3s cubic-bezier(.2,.8,.2,1)}
+  .settings-card::before{content:"";display:block;width:42px;height:4px;border-radius:2px;background:#4a4a4a;margin:0 auto 14px}
+  .settings-card h2{margin-top:0}
+  .pref{padding:15px 0}
+  .data-row .secondary{height:38px}
+  .btn-row .secondary,.btn-row .primary{height:46px;border-radius:12px}
+  .toast{border-radius:12px}
+}
+@media(max-width:700px){
+  aside .nav .long{display:none}
+  aside .nav .short{display:inline}
+}
+@media(max-width:420px){
+  .filters label{flex:1 1 42%}
 }
 @media(prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
