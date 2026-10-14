@@ -16,6 +16,7 @@ const LIKED_STORAGE = 'mytube_liked';
 const QUOTA_STORAGE = 'mytube_quota';
 const AVATAR_STORAGE = 'mytube_avatars';
 const SIDEBAR_STORAGE = 'mytube_sidebar';
+const PREFS_STORAGE = 'mytube_prefs';
 const RECENT_STORAGE = 'mytube_recent';
 const SEARCH_PAGE = 50;        // a search costs 100 units whatever the size, so ask for the max
 const SEARCH_TTL = 6 * HOUR;   // repeat searches within this time cost nothing
@@ -23,6 +24,10 @@ const AUTO_PAGES = 8;           // infinite scroll loads this many pages by itse
 const CACHE_PREFIX = 'mytube_cache_v1:';
 const MAX_CACHE_ENTRIES = 80;
 const DAILY_QUOTA = 10000;      // default YouTube Data API quota per day
+
+/* ---------- Preferences (Settings panel) ---------- */
+const prefs = { region: REGION, safe: 'moderate', autoplay: true };
+try { Object.assign(prefs, JSON.parse(localStorage.getItem(PREFS_STORAGE) || '{}')); } catch { /* use defaults */ }
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -359,7 +364,7 @@ function toggleSaved(id) {
 function popularPage(categoryId) {
   const fetchPage = async pageToken => {
     const d = await api('videos', {
-      part: 'snippet,statistics,contentDetails', chart: 'mostPopular', regionCode: REGION,
+      part: 'snippet,statistics,contentDetails', chart: 'mostPopular', regionCode: prefs.region,
       maxResults: PAGE_SIZE, videoCategoryId: categoryId, pageToken
     }, { ttl: 15 * MIN });
     return { items: (d.items || []).map(v => norm(v)), next: d.nextPageToken || null };
@@ -372,7 +377,7 @@ function searchPage(q, extra = {}) {
   return async pageToken => {
     const d = await api('search', {
       part: 'snippet', type: 'video', q, maxResults: SEARCH_PAGE,
-      safeSearch: 'moderate', pageToken, ...extra
+      safeSearch: prefs.safe, pageToken, ...extra
     }, { ttl: SEARCH_TTL });
     const items = (d.items || []).map(v => norm(v, true));
     return { items: await withDetails(items), next: d.nextPageToken || null };
@@ -530,7 +535,7 @@ function showView(name) {
 }
 
 function embedUrl(id, start = 0) {
-  return 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(id) + '?autoplay=1&rel=0' + (start ? '&start=' + start : '');
+  return 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(id) + '?autoplay=' + (prefs.autoplay || start ? 1 : 0) + '&rel=0' + (start ? '&start=' + start : '');
 }
 
 function closeWatch() {
@@ -1201,8 +1206,46 @@ function saveKey() {
 }
 $('#saveKey').onclick = saveKey;
 $('#apiKey').addEventListener('keydown', e => { if (e.key === 'Enter') saveKey(); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') openSettings(false); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { openSettings(false); openPrefs(false); } });
 $('#settingsModal').addEventListener('click', e => { if (e.target.id === 'settingsModal') openSettings(false); });
+
+/* ---------- Settings panel ---------- */
+let prefsDirty = false;
+function savePrefs() { lsSet(PREFS_STORAGE, JSON.stringify(prefs)); }
+
+function refreshPrefsUi() {
+  $('#pRegion').value = prefs.region; $('#pSafe').value = prefs.safe; $('#pAutoplay').checked = !!prefs.autoplay;
+  $('#pCompact').checked = document.body.classList.contains('side-mini');
+  $('#dSaved').textContent = `Watch later (${state.saved.length})`;
+  $('#dLiked').textContent = `Liked videos (${state.liked.length})`;
+  $('#dRecent').textContent = `Search history (${readRecent().length})`;
+  const q = readQuota();
+  $('#prefsQuota').textContent = `API use today: about ${q.units.toLocaleString()} of ${DAILY_QUOTA.toLocaleString()} units (estimate).`;
+}
+function openPrefs(open = true) {
+  if (open) { prefsDirty = false; refreshPrefsUi(); }
+  $('#prefsModal').classList.toggle('open', open);
+  if (!open && prefsDirty) { prefsDirty = false; router(); }   // reload the page with the new region / safe search
+}
+$('#prefsBtn').addEventListener('click', () => openPrefs());
+$('#prefsClose').addEventListener('click', () => openPrefs(false));
+$('#prefsDone').addEventListener('click', () => openPrefs(false));
+$('#prefsModal').addEventListener('click', e => { if (e.target.id === 'prefsModal') openPrefs(false); });
+$('#pRegion').addEventListener('change', e => { prefs.region = e.target.value; prefsDirty = true; savePrefs(); });
+$('#pSafe').addEventListener('change', e => { prefs.safe = e.target.value; prefsDirty = true; savePrefs(); });
+$('#pAutoplay').addEventListener('change', e => { prefs.autoplay = e.target.checked; savePrefs(); });
+$('#pCompact').addEventListener('change', e => setSidebar(e.target.checked));
+$('#prefsModal').addEventListener('click', e => {
+  const b = e.target.closest('[data-clear]');
+  if (!b) return;
+  const what = b.dataset.clear;
+  if (what === 'saved') { state.saved = []; lsSet(SAVED_STORAGE, '[]'); updateSaveButtons(); if (currentRoute().name === 'saved') renderSaved(); }
+  if (what === 'liked') { state.liked = []; lsSet(LIKED_STORAGE, '[]'); updateLikeButton(); }
+  if (what === 'recent') writeRecent([]);
+  if (what === 'cache') clearCache();
+  refreshPrefsUi();
+  toast('Cleared');
+});
 
 /* ---------- Sidebar: full or icon-only, remembered in this browser ---------- */
 function setSidebar(mini) {

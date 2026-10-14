@@ -12,6 +12,8 @@
   <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
   <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></symbol>
   <symbol id="i-settings" viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3M14 9l2 2"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></symbol>
   <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 9.5V20h5v-6h4v6h5V9.5"/></symbol>
   <symbol id="i-trending" viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></symbol>
   <symbol id="i-music" viewBox="0 0 24 24"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></symbol>
@@ -35,7 +37,10 @@
     <button aria-label="Search"><svg class="i" aria-hidden="true"><use href="#i-search"/></svg></button>
     <div class="suggest hidden" id="suggest" role="listbox" aria-label="Recent searches"></div>
   </form>
-  <div class="top-actions"><button class="small-btn" id="settingsBtn" aria-label="API key settings"><svg class="i" aria-hidden="true"><use href="#i-settings"/></svg><span class="txt"> API key</span></button></div>
+  <div class="top-actions">
+    <button class="small-btn" id="prefsBtn" aria-label="Settings"><svg class="i" aria-hidden="true"><use href="#i-gear"/></svg><span class="txt">Settings</span></button>
+    <button class="small-btn" id="settingsBtn" aria-label="API key"><svg class="i" aria-hidden="true"><use href="#i-key"/></svg><span class="txt">API key</span></button>
+  </div>
 </header>
 
 <div class="layout">
@@ -158,6 +163,38 @@
       <button class="secondary" id="cancelSettings">Cancel</button>
       <button class="primary" id="saveKey">Save key</button>
     </div>
+  </div>
+</div>
+
+<div class="settings" id="prefsModal">
+  <div class="settings-card prefs-card" role="dialog" aria-labelledby="prefsTitle">
+    <div class="prefs-head"><h2 id="prefsTitle">Settings</h2><button class="icon-btn" id="prefsClose" aria-label="Close"><svg class="i" aria-hidden="true"><use href="#i-x"/></svg></button></div>
+
+    <div class="pref">
+      <div class="pref-text"><label for="pRegion">Region</label><p>Which country's popular videos show on Home, Trending, Music and Gaming.</p></div>
+      <select id="pRegion"><option value="US">United States</option><option value="GB">United Kingdom</option><option value="DK">Denmark</option><option value="DE">Germany</option><option value="SE">Sweden</option><option value="NO">Norway</option><option value="FI">Finland</option><option value="NL">Netherlands</option><option value="FR">France</option><option value="ES">Spain</option><option value="IT">Italy</option><option value="PL">Poland</option><option value="CA">Canada</option><option value="AU">Australia</option><option value="IN">India</option><option value="JP">Japan</option><option value="KR">South Korea</option><option value="BR">Brazil</option><option value="MX">Mexico</option></select>
+    </div>
+    <div class="pref">
+      <div class="pref-text"><label for="pSafe">Safe search</label><p>How strictly search results are filtered.</p></div>
+      <select id="pSafe"><option value="none">Off</option><option value="moderate">Moderate</option><option value="strict">Strict</option></select>
+    </div>
+    <div class="pref">
+      <div class="pref-text"><label for="pAutoplay">Autoplay</label><p>Start a video as soon as its page opens.</p></div>
+      <input type="checkbox" id="pAutoplay" class="switch" role="switch">
+    </div>
+    <div class="pref pref-desktop">
+      <div class="pref-text"><label for="pCompact">Compact sidebar</label><p>Show only icons in the sidebar.</p></div>
+      <input type="checkbox" id="pCompact" class="switch" role="switch">
+    </div>
+
+    <h3 class="pref-h">Data in this browser</h3>
+    <div class="data-row"><span id="dSaved">Watch later</span><button class="secondary" data-clear="saved">Clear</button></div>
+    <div class="data-row"><span id="dLiked">Liked videos</span><button class="secondary" data-clear="liked">Clear</button></div>
+    <div class="data-row"><span id="dRecent">Search history</span><button class="secondary" data-clear="recent">Clear</button></div>
+    <div class="data-row"><span>Cached results</span><button class="secondary" data-clear="cache">Clear</button></div>
+    <p class="quota-line" id="prefsQuota"></p>
+
+    <div class="btn-row"><button class="primary" id="prefsDone">Done</button></div>
   </div>
 </div>
 
